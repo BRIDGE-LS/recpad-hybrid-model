@@ -957,35 +957,42 @@ class TMETrainer:
     def _train_distributed(self) -> Dict[str, any]:
         """Executa treinamento distribuído usando multiprocessing"""
         
-        def setup_and_train(rank, world_size, config):
-            """Função para cada processo DDP"""
-            # Setup DDP
-            os.environ['MASTER_ADDR'] = config.master_addr
-            os.environ['MASTER_PORT'] = config.master_port
+        # def setup_and_train(rank, world_size, config):
+        #     """Função para cada processo DDP"""
+        #     # Setup DDP
+        #     os.environ['MASTER_ADDR'] = config.master_addr
+        #     os.environ['MASTER_PORT'] = config.master_port
             
-            dist.init_process_group(
-                backend=config.ddp_backend,
-                rank=rank,
-                world_size=world_size
-            )
+        #     dist.init_process_group(
+        #         backend=config.ddp_backend,
+        #         rank=rank,
+        #         world_size=world_size
+        #     )
             
-            # Criar trainer para este rank
-            trainer = DistributedTMETrainer(config, rank=rank, world_size=world_size)
+        #     # Criar trainer para este rank
+        #     trainer = DistributedTMETrainer(config, rank=rank, world_size=world_size)
             
-            try:
-                results = trainer.train_model()
-                return results
-            finally:
-                trainer._cleanup()
+        #     try:
+        #         results = trainer.train_model()
+        #         return results
+        #     finally:
+        #         trainer._cleanup()
         
         # Spawn processos para DDP
+        # mp.spawn(
+        #     setup_and_train,
+        #     args=(self.world_size, self.config),
+        #     nprocs=self.world_size,
+        #     join=True
+        # )
+        
         mp.spawn(
-            setup_and_train,
-            args=(self.world_size, self.config),
+            distributed_setup_and_train,
+            args=(self.world_size, asdict(self.config)),  # <- Passa config como dict
             nprocs=self.world_size,
             join=True
         )
-        
+
         # Carregar resultados do rank 0
         if os.path.exists('best_model.pth'):
             checkpoint = torch.load('best_model.pth', map_location='cpu')
@@ -1554,6 +1561,32 @@ def cleanup_distributed_environment():
     
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
+
+def distributed_setup_and_train(rank, world_size, config_dict):
+    """
+    Função auxiliar para cada processo DDP (nível de módulo - picklável).
+    """
+    # Recriar config
+    config = TMEConfig(**config_dict)
+
+    # Setup DDP
+    os.environ['MASTER_ADDR'] = config.master_addr
+    os.environ['MASTER_PORT'] = config.master_port
+
+    dist.init_process_group(
+        backend=config.ddp_backend,
+        rank=rank,
+        world_size=world_size
+    )
+
+    # Criar trainer para este rank
+    trainer = DistributedTMETrainer(config, rank=rank, world_size=world_size)
+
+    try:
+        trainer.train_model()
+    finally:
+        trainer._cleanup()
+
 
 # Compatibilidade com sistema híbrido original
 from pathlib import Path

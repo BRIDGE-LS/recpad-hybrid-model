@@ -2363,6 +2363,7 @@ class TMEGastricAnalyzer:
 
     def _save_results(self):
         """Salva resultados expandidos em arquivo JSON"""
+        
         def convert_numpy(obj):
             if isinstance(obj, np.ndarray):
                 return obj.tolist()
@@ -2370,13 +2371,24 @@ class TMEGastricAnalyzer:
                 return int(obj)
             elif isinstance(obj, np.floating):
                 return float(obj)
+            elif isinstance(obj, np.bool_):
+                return bool(obj)
+            elif isinstance(obj, (np.generic,)):
+                return obj.item()
             elif isinstance(obj, dict):
-                return {key: convert_numpy(value) for key, value in obj.items()}
+                return {convert_numpy(key): convert_numpy(value) for key, value in obj.items()}
             elif isinstance(obj, list):
                 return [convert_numpy(item) for item in obj]
+            elif isinstance(obj, tuple):
+                return [convert_numpy(item) for item in obj]  # converte tuple em list
             else:
-                return obj
-        
+                # garantir que o objeto é serializável — se não for, converter para string
+                try:
+                    json.dumps(obj)  # tenta serializar
+                    return obj
+                except (TypeError, ValueError):
+                    return str(obj)
+
         results_serializable = convert_numpy(self.results)
         
         # Adicionar metadados expandidos
@@ -2405,7 +2417,7 @@ class TMEGastricAnalyzer:
         }
         
         with open('tme_exploratory_analysis_expanded.json', 'w') as f:
-            json.dump(final_results, f, indent=2, default=convert_numpy)
+            json.dump(final_results, f, indent=2)
         
         print("📊 Resultados expandidos salvos em 'tme_exploratory_analysis_expanded.json'")
 
