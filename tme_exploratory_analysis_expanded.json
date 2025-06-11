@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "analysis_version": "2.0_expanded",
+    "dataset": "HMU-GC-HE-30K",
+    "sample_size_per_class": 150,
+    "classes_analyzed": [
+      "ADI",
+      "DEB",
+      "LYM",
+      "MUC",
+      "MUS",
+      "NOR",
+      "STR",
+      "TUM"
+    ],
+    "literature_validated": 4,
+    "analysis_timestamp": "2025-06-11T11:21:16.837628",
+    "scientific_basis": {
+      "primary_references": [
+        "Lou et al. (2025): HMU-GC-HE-30K dataset challenges",
+        "Kather et al. (2019): TME classification difficulties",
+        "Mandal et al. (2025): Nuclear morphology variability",
+        "Vahadane et al. (2016): H&E stain separation methods"
+      ],
+      "methodology": "Quantitative validation of literature findings with expanded analysis"
+    }
+  },
+  "analysis_results": {
+    "literature_validation": {
+      "mucina_transparency": {
+        "validated": 
