@@ -1,0 +1,65 @@
+{
+  "config": {
+    "data_path": "data",
+    "image_size": 224,
+    "batch_size": 32,
+    "num_workers": 4,
+    "classes": [
+      "ADI",
+      "DEB",
+      "LYM",
+      "MUC",
+      "MUS",
+      "NOR",
+      "STR",
+      "TUM"
+    ],
+    "num_classes": 8,
+    "learning_rate": 0.0001,
+    "weight_decay": 0.0001,
+    "num_epochs": 100,
+    "patience": 15,
+    "k_folds": 5,
+    "test_size": 0.2,
+    "random_state": 42,
+    "model_name": "efficientnet_b4",
+    "pretrained": true,
+    "dropout_rate": 0.3,
+    "augmentation_params": {
+      "rotation_limit": 90,
+      "shift_limit": 0.1,
+      "scale_limit": 0.1,
+      "brightness_limit": 0.1,
+      "contrast_limit": 0.1,
+      "hue_shift_limit": 10,
+      "saturation_shift_limit": 15,
+      "value_shift_limit": 10,
+      "noise_prob": 0.1,
+      "blur_prob": 0.1,
+      "flip_prob": 0.5
+    },
+    "use_distributed": true,
+    "ddp_backend": "nccl",
+    "master_addr": "127.0.0.1",
+    "master_port": "12355",
+    "find_unused_parameters": false,
+    "gradient_clipping": 1.0
+  },
+  "training_results": {
+    "model": null,
+    "history": {},
+    "test_metrics": {
+      "accuracy": 0.7206260720411664,
+      "balanced_accuracy": 0.7216347738078426,
+      "f1_macro": 0.7214076516930346,
+      "f1_weighted": 0.7214810371767195,
+      "kappa": 0.6819419039421124,
+      "auc": 0.9575037606844514,
+      "loss": 0.7402960383053709
+    },
+    "best_epoch": 98
+  },
+  "class_performance": {},
+  "next_phase_recommendation": "REPROJETAR",
+  "timestamp": 1749736158.917914
+}

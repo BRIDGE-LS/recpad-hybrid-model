@@ -27,7 +27,7 @@ warnings.filterwarnings('ignore')
 
 # Importar o analisador TME
 try:
-    from analisador_imagens import run_exploratory_analysis_before_training, TMEGastricAnalyzer
+    from sistema_analisador_imagens_tme import run_exploratory_analysis_before_training, TMEGastricAnalyzer
     print("✅ Analisador TME importado com sucesso!")
 except ImportError as e:
     print(f"❌ Erro ao importar analisador TME: {e}")

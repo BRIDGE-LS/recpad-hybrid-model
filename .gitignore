@@ -2,3 +2,4 @@ data/
 hmu_gc_data
 *.pth
 .venv/
+__pycache__/

@@ -31,6 +31,8 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Optional, Union
 from dataclasses import dataclass, asdict
 import time
+import datetime
+
 from collections import Counter, defaultdict
 
 import numpy as np
@@ -94,6 +96,7 @@ class TMEConfig:
     # Configurações de treinamento baseadas em literatura médica (MANTIDAS)
     learning_rate: float = 1e-4     # Otimizado para histopatologia (Echle et al. 2021)
     weight_decay: float = 1e-4      # Regularização conservadora
+    #num_epochs: int = 7
     num_epochs: int = 100
     patience: int = 15              # Early stopping conservador (Campanella et al. 2019)
     
@@ -640,7 +643,7 @@ class DistributedTMETrainer:
                     raise e
             
             # Log progresso a cada 100 batches (apenas rank 0)
-            if batch_idx % 100 == 0 and self.rank == 0:
+            if batch_idx % 50 == 0 and self.rank == 0:
                 current_loss = running_loss / total_samples
                 current_acc = running_corrects.double() / total_samples
                 logging.info(f"Epoch {epoch}, Batch {batch_idx}: Loss={current_loss:.4f}, Acc={current_acc:.4f}")
@@ -669,12 +672,180 @@ class DistributedTMETrainer:
             'accuracy': epoch_acc.item() if isinstance(epoch_acc, torch.Tensor) else epoch_acc
         }
     
+
+    def train_epoch(self, model: nn.Module, train_loader: DataLoader, 
+               optimizer: optim.Optimizer, criterion: nn.Module, epoch: int) -> Dict[str, float]:
+        """Treina uma época com monitoramento detalhado e suporte a DDP - VERSÃO CORRIGIDA COMPLETA"""
+        model.train()
+        
+        # Configurar DistributedSampler para época atual
+        if self.is_distributed and hasattr(train_loader.sampler, 'set_epoch'):
+            train_loader.sampler.set_epoch(epoch)
+        
+        running_loss = 0.0
+        running_corrects = 0
+        total_samples = 0
+        
+        for batch_idx, (inputs, labels) in enumerate(train_loader):
+            inputs, labels = inputs.to(self.device), labels.to(self.device)
+            
+            optimizer.zero_grad()
+            
+            try:
+                # Forward pass
+                outputs = model(inputs)
+                loss = criterion(outputs, labels)
+                
+                # Backward pass
+                loss.backward()
+                
+                # Gradient clipping para estabilidade (baseado em Slideflow 2024)
+                torch.nn.utils.clip_grad_norm_(
+                    model.parameters(), 
+                    max_norm=self.config.gradient_clipping
+                )
+                
+                optimizer.step()
+                
+                # Estatísticas
+                running_loss += loss.item() * inputs.size(0)
+                _, preds = torch.max(outputs, 1)
+                running_corrects += torch.sum(preds == labels.data)
+                total_samples += inputs.size(0)
+                
+            except RuntimeError as e:
+                if self.is_distributed and ("NCCL" in str(e) or "Expected to have finished reduction" in str(e)):
+                    logging.warning(f"[Rank {self.rank}] DDP sync error no batch {batch_idx}. Tentando recuperar...")
+                    # Força sincronização e continua
+                    try:
+                        torch.cuda.synchronize()
+                        if dist.is_initialized():
+                            dist.barrier()
+                        continue
+                    except Exception as recovery_error:
+                        logging.error(f"[Rank {self.rank}] Falha na recuperação DDP: {recovery_error}")
+                        raise e
+                else:
+                    # Outros tipos de erro - propagar
+                    raise e
+            
+            # Log progresso a cada 100 batches (apenas rank 0)
+            if batch_idx % 50 == 0 and self.rank == 0:
+                current_loss = running_loss / total_samples if total_samples > 0 else 0.0
+                current_acc = running_corrects.double() / total_samples if total_samples > 0 else 0.0
+                logging.info(f"Epoch {epoch}, Batch {batch_idx}: Loss={current_loss:.4f}, Acc={current_acc:.4f}")
+        
+        # Sincronizar métricas entre ranks se distribuído
+        if self.is_distributed:
+            try:
+                # Converter para tensors
+                loss_tensor = torch.tensor(running_loss, device=self.device)
+                corrects_tensor = torch.tensor(running_corrects.float(), device=self.device)
+                samples_tensor = torch.tensor(total_samples, device=self.device)
+                
+                # All-reduce das métricas (MÉTODO CORRIGIDO)
+                dist.all_reduce(loss_tensor, op=dist.ReduceOp.SUM)
+                dist.all_reduce(corrects_tensor, op=dist.ReduceOp.SUM)
+                dist.all_reduce(samples_tensor, op=dist.ReduceOp.SUM)
+                
+                # Médias globais
+                epoch_loss = loss_tensor.item() / samples_tensor.item()
+                epoch_acc = corrects_tensor.item() / samples_tensor.item()
+                
+            except Exception as e:
+                logging.warning(f"[Rank {self.rank}] Erro na sincronização de métricas de treinamento: {e}")
+                # Fallback para métricas locais
+                epoch_loss = running_loss / total_samples if total_samples > 0 else 0.0
+                epoch_acc = running_corrects.double() / total_samples if total_samples > 0 else 0.0
+                epoch_acc = epoch_acc.item() if isinstance(epoch_acc, torch.Tensor) else epoch_acc
+        else:
+            # Modo single GPU
+            epoch_loss = running_loss / total_samples if total_samples > 0 else 0.0
+            epoch_acc = running_corrects.double() / total_samples if total_samples > 0 else 0.0
+            epoch_acc = epoch_acc.item() if isinstance(epoch_acc, torch.Tensor) else epoch_acc
+        
+        return {
+            'loss': float(epoch_loss),
+            'accuracy': float(epoch_acc)
+        }
+
+
+
+
+
+    # def validate_epoch(self, model: nn.Module, val_loader: DataLoader, 
+    #                   criterion: nn.Module) -> Dict[str, float]:
+    #     """Valida modelo com métricas médicas robustas e suporte a DDP"""
+    #     model.eval()
+        
+    #     running_loss = 0.0
+    #     all_preds = []
+    #     all_labels = []
+    #     all_probs = []
+        
+    #     with torch.no_grad():
+    #         for inputs, labels in val_loader:
+    #             inputs, labels = inputs.to(self.device), labels.to(self.device)
+                
+    #             outputs = model(inputs)
+    #             loss = criterion(outputs, labels)
+                
+    #             # Probabilidades e predições
+    #             probs = F.softmax(outputs, dim=1)
+    #             _, preds = torch.max(outputs, 1)
+                
+    #             running_loss += loss.item() * inputs.size(0)
+    #             all_preds.extend(preds.cpu().numpy())
+    #             all_labels.extend(labels.cpu().numpy())
+    #             all_probs.extend(probs.cpu().numpy())
+        
+    #     # Sincronizar métricas entre ranks se distribuído
+    #     if self.is_distributed:
+    #         # Gather todas as predições e labels
+    #         all_preds_tensor = torch.tensor(all_preds, device=self.device)
+    #         all_labels_tensor = torch.tensor(all_labels, device=self.device)
+            
+    #         # Preparar listas para gather
+    #         gathered_preds = [torch.zeros_like(all_preds_tensor) for _ in range(self.world_size)]
+    #         gathered_labels = [torch.zeros_like(all_labels_tensor) for _ in range(self.world_size)]
+            
+    #         # All gather
+    #         dist.all_gather(gathered_preds, all_preds_tensor)
+    #         dist.all_gather(gathered_labels, all_labels_tensor)
+            
+    #         # Concatenar resultados apenas no rank 0
+    #         if self.rank == 0:
+    #             all_preds = torch.cat(gathered_preds).cpu().numpy()
+    #             all_labels = torch.cat(gathered_labels).cpu().numpy()
+            
+    #         # Sincronizar loss
+    #         loss_tensor = torch.tensor(running_loss, device=self.device)
+    #         dist.all_reduce(loss_tensor, op=dist.ReduceOp.SUM)
+    #         total_loss = loss_tensor.item() / len(val_loader.dataset)
+    #     else:
+    #         total_loss = running_loss / len(val_loader.dataset)
+        
+    #     # Calcular métricas médicas robustas (apenas rank 0 ou single GPU)
+    #     if self.rank == 0 or not self.is_distributed:
+    #         metrics = self._calculate_medical_metrics(all_labels, all_preds, all_probs)
+    #         metrics['loss'] = total_loss
+    #     else:
+    #         # Ranks não-zero retornam métricas vazias
+    #         metrics = {'loss': total_loss}
+        
+    #     return metrics
+    
+
     def validate_epoch(self, model: nn.Module, val_loader: DataLoader, 
-                      criterion: nn.Module) -> Dict[str, float]:
-        """Valida modelo com métricas médicas robustas e suporte a DDP"""
+                  criterion: nn.Module) -> Dict[str, float]:
+        """Valida modelo com métricas médicas robustas e suporte a DDP - VERSÃO CORRIGIDA"""
         model.eval()
         
         running_loss = 0.0
+        running_corrects = 0
+        total_samples = 0
+        
+        # Para métricas detalhadas, coletamos apenas no rank 0
         all_preds = []
         all_labels = []
         all_probs = []
@@ -690,87 +861,200 @@ class DistributedTMETrainer:
                 probs = F.softmax(outputs, dim=1)
                 _, preds = torch.max(outputs, 1)
                 
+                # Acumular métricas básicas
                 running_loss += loss.item() * inputs.size(0)
-                all_preds.extend(preds.cpu().numpy())
-                all_labels.extend(labels.cpu().numpy())
-                all_probs.extend(probs.cpu().numpy())
+                running_corrects += torch.sum(preds == labels.data).item()
+                total_samples += inputs.size(0)
+                
+                # Coletar predições apenas no rank 0 para evitar all_gather
+                if not self.is_distributed or self.rank == 0:
+                    all_preds.extend(preds.cpu().numpy())
+                    all_labels.extend(labels.cpu().numpy())
+                    all_probs.extend(probs.cpu().numpy())
         
-        # Sincronizar métricas entre ranks se distribuído
+        # CORREÇÃO PRINCIPAL: Usar all_reduce para métricas básicas
         if self.is_distributed:
-            # Gather todas as predições e labels
-            all_preds_tensor = torch.tensor(all_preds, device=self.device)
-            all_labels_tensor = torch.tensor(all_labels, device=self.device)
-            
-            # Preparar listas para gather
-            gathered_preds = [torch.zeros_like(all_preds_tensor) for _ in range(self.world_size)]
-            gathered_labels = [torch.zeros_like(all_labels_tensor) for _ in range(self.world_size)]
-            
-            # All gather
-            dist.all_gather(gathered_preds, all_preds_tensor)
-            dist.all_gather(gathered_labels, all_labels_tensor)
-            
-            # Concatenar resultados apenas no rank 0
-            if self.rank == 0:
-                all_preds = torch.cat(gathered_preds).cpu().numpy()
-                all_labels = torch.cat(gathered_labels).cpu().numpy()
-            
-            # Sincronizar loss
-            loss_tensor = torch.tensor(running_loss, device=self.device)
-            dist.all_reduce(loss_tensor, op=dist.ReduceOp.SUM)
-            total_loss = loss_tensor.item() / len(val_loader.dataset)
-        else:
-            total_loss = running_loss / len(val_loader.dataset)
+            try:
+                # Converter para tensors
+                metrics_tensor = torch.tensor([
+                    running_loss, 
+                    running_corrects, 
+                    total_samples
+                ], device=self.device, dtype=torch.float)
+                
+                # All-reduce das métricas básicas
+                dist.all_reduce(metrics_tensor, op=dist.ReduceOp.SUM)
+                
+                # Extrair valores sincronizados
+                total_loss = metrics_tensor[0].item()
+                total_corrects = metrics_tensor[1].item()
+                total_samples_all = metrics_tensor[2].item()
+                
+                # Calcular métricas globais
+                avg_loss = total_loss / total_samples_all
+                accuracy = total_corrects / total_samples_all
+                
+                # Apenas rank 0 calcula métricas detalhadas
+                if self.rank == 0 and len(all_preds) > 0:
+                    detailed_metrics = self._calculate_medical_metrics(
+                        all_labels, all_preds, all_probs
+                    )
+                    detailed_metrics['loss'] = avg_loss
+                    detailed_metrics['accuracy'] = accuracy
+                    return detailed_metrics
+                else:
+                    # Outros ranks retornam métricas básicas
+                    return {
+                        'loss': avg_loss,
+                        'accuracy': accuracy,
+                        'balanced_accuracy': accuracy,  # Aproximação
+                        'f1_macro': 0.0,
+                        'f1_weighted': 0.0,
+                        'kappa': 0.0,
+                        'auc': 0.0
+                    }
+                    
+            except Exception as e:
+                logging.warning(f"[Rank {self.rank}] Erro na sincronização DDP: {e}")
+                # Fallback para métricas locais
+                pass
         
-        # Calcular métricas médicas robustas (apenas rank 0 ou single GPU)
-        if self.rank == 0 or not self.is_distributed:
+        # Modo single GPU ou fallback
+        avg_loss = running_loss / total_samples if total_samples > 0 else 0.0
+        
+        if len(all_preds) > 0:
             metrics = self._calculate_medical_metrics(all_labels, all_preds, all_probs)
-            metrics['loss'] = total_loss
+            metrics['loss'] = avg_loss
+            return metrics
         else:
-            # Ranks não-zero retornam métricas vazias
-            metrics = {'loss': total_loss}
+            return {
+                'loss': avg_loss,
+                'accuracy': 0.0,
+                'balanced_accuracy': 0.0,
+                'f1_macro': 0.0,
+                'f1_weighted': 0.0,
+                'kappa': 0.0,
+                'auc': 0.0
+            }
+
+
+
+
+    # def _calculate_medical_metrics(self, y_true: List[int], 
+    #                              y_pred: List[int], y_probs: List[List[float]]) -> Dict[str, float]:
+    #     """
+    #     Calcula métricas médicas robustas seguindo guidelines clínicos.
         
-        return metrics
+    #     Métricas baseadas em:
+    #     - Echle et al. (2021): Clinical validation metrics
+    #     - Kather et al. (2019): Histopathology benchmarks
+    #     - Medical imaging evaluation standards
+    #     """
+    #     y_true = np.array(y_true)
+    #     y_pred = np.array(y_pred)
+    #     y_probs = np.array(y_probs)
+        
+    #     # Métricas básicas
+    #     accuracy = accuracy_score(y_true, y_pred)
+    #     balanced_acc = balanced_accuracy_score(y_true, y_pred)
+        
+    #     # F1-scores
+    #     f1_macro = f1_score(y_true, y_pred, average='macro')
+    #     f1_weighted = f1_score(y_true, y_pred, average='weighted')
+        
+    #     # Cohen's Kappa (importante para concordância em medicina)
+    #     kappa = cohen_kappa_score(y_true, y_pred)
+        
+    #     # AUC multiclass (one-vs-rest)
+    #     try:
+    #         auc_score = roc_auc_score(y_true, y_probs, multi_class='ovr', average='macro')
+    #     except:
+    #         auc_score = 0.0
+        
+    #     return {
+    #         'accuracy': accuracy,
+    #         'balanced_accuracy': balanced_acc,  # Métrica principal para medicina
+    #         'f1_macro': f1_macro,
+    #         'f1_weighted': f1_weighted,
+    #         'kappa': kappa,
+    #         'auc': auc_score
+    #     }
     
+
     def _calculate_medical_metrics(self, y_true: List[int], 
-                                 y_pred: List[int], y_probs: List[List[float]]) -> Dict[str, float]:
+                             y_pred: List[int], y_probs: List[List[float]]) -> Dict[str, float]:
         """
-        Calcula métricas médicas robustas seguindo guidelines clínicos.
-        
-        Métricas baseadas em:
-        - Echle et al. (2021): Clinical validation metrics
-        - Kather et al. (2019): Histopathology benchmarks
-        - Medical imaging evaluation standards
+        Calcula métricas médicas robustas com tratamento de erros - VERSÃO SEGURA
         """
-        y_true = np.array(y_true)
-        y_pred = np.array(y_pred)
-        y_probs = np.array(y_probs)
-        
-        # Métricas básicas
-        accuracy = accuracy_score(y_true, y_pred)
-        balanced_acc = balanced_accuracy_score(y_true, y_pred)
-        
-        # F1-scores
-        f1_macro = f1_score(y_true, y_pred, average='macro')
-        f1_weighted = f1_score(y_true, y_pred, average='weighted')
-        
-        # Cohen's Kappa (importante para concordância em medicina)
-        kappa = cohen_kappa_score(y_true, y_pred)
-        
-        # AUC multiclass (one-vs-rest)
         try:
-            auc_score = roc_auc_score(y_true, y_probs, multi_class='ovr', average='macro')
-        except:
+            # Validar entradas
+            if len(y_true) == 0 or len(y_pred) == 0:
+                logging.warning("Dados vazios para cálculo de métricas")
+                return self._get_default_metrics()
+            
+            y_true = np.array(y_true)
+            y_pred = np.array(y_pred)
+            y_probs = np.array(y_probs)
+            
+            # Validar shapes
+            if y_true.shape[0] != y_pred.shape[0]:
+                logging.warning(f"Shape mismatch: true={y_true.shape}, pred={y_pred.shape}")
+                return self._get_default_metrics()
+            
+            # Métricas básicas
+            accuracy = accuracy_score(y_true, y_pred)
+            
+            # Balanced accuracy com tratamento de erro
+            try:
+                balanced_acc = balanced_accuracy_score(y_true, y_pred)
+            except Exception:
+                balanced_acc = accuracy
+            
+            # F1-scores com tratamento de erro
+            try:
+                f1_macro = f1_score(y_true, y_pred, average='macro', zero_division=0)
+                f1_weighted = f1_score(y_true, y_pred, average='weighted', zero_division=0)
+            except Exception:
+                f1_macro = f1_weighted = 0.0
+            
+            # Cohen's Kappa com tratamento de erro
+            try:
+                kappa = cohen_kappa_score(y_true, y_pred)
+            except Exception:
+                kappa = 0.0
+            
+            # AUC com tratamento robusto
             auc_score = 0.0
-        
-        return {
-            'accuracy': accuracy,
-            'balanced_accuracy': balanced_acc,  # Métrica principal para medicina
-            'f1_macro': f1_macro,
-            'f1_weighted': f1_weighted,
-            'kappa': kappa,
-            'auc': auc_score
-        }
-    
+            try:
+                if y_probs.ndim == 2 and y_probs.shape[1] == self.config.num_classes:
+                    # Verificar se temos pelo menos 2 classes diferentes
+                    unique_classes = np.unique(y_true)
+                    if len(unique_classes) >= 2:
+                        auc_score = roc_auc_score(
+                            y_true, y_probs, 
+                            multi_class='ovr', 
+                            average='macro',
+                            labels=np.arange(self.config.num_classes)
+                        )
+            except Exception as e:
+                logging.debug(f"Erro no cálculo AUC: {e}")
+                auc_score = 0.0
+            
+            return {
+                'accuracy': float(accuracy),
+                'balanced_accuracy': float(balanced_acc),
+                'f1_macro': float(f1_macro),
+                'f1_weighted': float(f1_weighted),
+                'kappa': float(kappa),
+                'auc': float(auc_score)
+            }
+            
+        except Exception as e:
+            logging.error(f"Erro no cálculo de métricas: {e}")
+            return self._get_default_metrics()
+
+
+
     def train_model(self) -> Dict[str, any]:
         """
         Treinamento completo com early stopping e validação robusta.
@@ -919,6 +1203,19 @@ class DistributedTMETrainer:
             # Ranks não-zero retornam resultado vazio
             return {}
 
+
+    def _get_default_metrics(self) -> Dict[str, float]:
+        """Retorna métricas padrão em caso de erro"""
+        return {
+            'accuracy': 0.0,
+            'balanced_accuracy': 0.0,
+            'f1_macro': 0.0,
+            'f1_weighted': 0.0,
+            'kappa': 0.0,
+            'auc': 0.0
+        }
+
+
 class TMETrainer:
     """
     Wrapper para manter compatibilidade com código original.
@@ -1044,6 +1341,7 @@ def main():
         model_name="efficientnet_b4",
         batch_size=32,
         learning_rate=1e-4,
+        #num_epochs=7,
         num_epochs=100,
         patience=15,
         use_distributed=True  # Auto-detecta múltiplas GPUs
@@ -1347,6 +1645,7 @@ def create_validation_pipeline() -> Dict[str, any]:
         batch_size=32,
         learning_rate=1e-4,
         weight_decay=1e-4,
+        #num_epochs=7,
         num_epochs=100,
         patience=15,
         dropout_rate=0.3,
@@ -1562,30 +1861,89 @@ def cleanup_distributed_environment():
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
 
+# def distributed_setup_and_train(rank, world_size, config_dict):
+#     """
+#     Função auxiliar para cada processo DDP (nível de módulo - picklável).
+#     """
+#     # Recriar config
+#     config = TMEConfig(**config_dict)
+
+#     # Setup DDP
+#     os.environ['MASTER_ADDR'] = config.master_addr
+#     os.environ['MASTER_PORT'] = config.master_port
+
+#     dist.init_process_group(
+#         backend=config.ddp_backend,
+#         rank=rank,
+#         world_size=world_size,
+#         timeout=datetime.timedelta(minutes=30) 
+#     )
+
+#     # Criar trainer para este rank
+#     trainer = DistributedTMETrainer(config, rank=rank, world_size=world_size)
+
+#     try:
+#         trainer.train_model()
+#     finally:
+#         trainer._cleanup()
+
+
 def distributed_setup_and_train(rank, world_size, config_dict):
     """
-    Função auxiliar para cada processo DDP (nível de módulo - picklável).
+    VERSÃO CORRIGIDA - Função auxiliar para cada processo DDP (nível de módulo - picklável).
     """
-    # Recriar config
-    config = TMEConfig(**config_dict)
-
-    # Setup DDP
-    os.environ['MASTER_ADDR'] = config.master_addr
-    os.environ['MASTER_PORT'] = config.master_port
-
-    dist.init_process_group(
-        backend=config.ddp_backend,
-        rank=rank,
-        world_size=world_size
-    )
-
-    # Criar trainer para este rank
-    trainer = DistributedTMETrainer(config, rank=rank, world_size=world_size)
-
     try:
-        trainer.train_model()
+        # Recriar config
+        config = TMEConfig(**config_dict)
+
+        # Configurações NCCL otimizadas ANTES do init
+        os.environ['MASTER_ADDR'] = config.master_addr
+        os.environ['MASTER_PORT'] = config.master_port
+        
+        # Configurações NCCL críticas para estabilidade
+        os.environ['TORCH_NCCL_BLOCKING_WAIT'] = '1'
+        os.environ['NCCL_ASYNC_ERROR_HANDLING'] = '1'
+        os.environ['NCCL_TIMEOUT'] = '1800'  # 30 minutos
+        os.environ['NCCL_IB_DISABLE'] = '1'
+        os.environ['NCCL_SOCKET_NTHREADS'] = '4'
+        os.environ['NCCL_NSOCKS_PERTHREAD'] = '2'
+
+        # Init process group com timeout muito longo
+        dist.init_process_group(
+            backend=config.ddp_backend,
+            rank=rank,
+            world_size=world_size,
+            timeout=datetime.timedelta(minutes=60)  # Timeout muito longo
+        )
+
+        # Configurar CUDA
+        torch.cuda.set_device(rank)
+        
+        if rank == 0:
+            logging.info(f"DDP inicializado - Rank {rank}/{world_size}")
+
+        # Criar trainer para este rank
+        trainer = DistributedTMETrainer(config, rank=rank, world_size=world_size)
+
+        # Executar treinamento
+        results = trainer.train_model()
+        
+        if rank == 0:
+            logging.info("Treinamento concluído com sucesso")
+        
+        return results
+        
+    except Exception as e:
+        logging.error(f"[Rank {rank}] Erro no treinamento distribuído: {e}")
+        raise e
     finally:
-        trainer._cleanup()
+        # Cleanup sempre executado
+        try:
+            if dist.is_initialized():
+                dist.destroy_process_group()
+            torch.cuda.empty_cache()
+        except:
+            pass
 
 
 # Compatibilidade com sistema híbrido original
@@ -1737,7 +2095,31 @@ if __name__ == "__main__":
     - Instruções de uso detalhadas
     - Tratamento robusto de erros
     """
-    
+    print("🔧 Configurando NCCL para treinamento otimizado...")
+    os.environ['TORCH_NCCL_BLOCKING_WAIT'] = '1'
+    os.environ['TORCH_NCCL_ASYNC_ERROR_HANDLING'] = '1'
+
+    os.environ['TORCH_NCCL_DEBUG'] = 'INFO'  # Enable debugging
+    os.environ['TORCH_NCCL_TIMEOUT'] = '7200'  # 2 hours in seconds
+    os.environ['TORCH_NCCL_BLOCKING_WAIT'] = '1'
+    os.environ['TORCH_DISTRIBUTED_DEBUG'] = 'DETAIL' 
+
+    # Network optimization
+    os.environ['TORCH_NCCL_IB_DISABLE'] = '1'  # Try if using InfiniBand
+    os.environ['TORCH_NCCL_SOCKET_NTHREADS'] = '4'
+    os.environ['TORCH_NCCL_NSOCKS_PERTHREAD'] = '2'
+
+    os.environ['NCCL_BLOCKING_WAIT'] = '1'
+    os.environ['NCCL_ASYNC_ERROR_HANDLING'] = '1'
+    os.environ['NCCL_DEBUG'] = 'INFO'
+    os.environ['NCCL_TIMEOUT'] = '7200'  # 2 hours in seconds
+
+    # Network optimization
+    os.environ['NCCL_IB_DISABLE'] = '1'
+    os.environ['NCCL_SOCKET_NTHREADS'] = '4'
+    os.environ['NCCL_NSOCKS_PERTHREAD'] = '2'
+
+
     print("="*80)
     print("SISTEMA TME - CLASSIFICAÇÃO PARA CÂNCER GÁSTRICO")
     print("VERSÃO MELHORADA COM SUPORTE A PROCESSAMENTO PARALELO")
@@ -1795,15 +2177,15 @@ if __name__ == "__main__":
             sys.exit(1)
         
         # 2. Tentar executar sistema híbrido se aprovado
-        if results.get('training_results'):
-            hybrid_results = run_hybrid_system_if_approved(
-                results['training_results'], 
-                TMEConfig(use_distributed=(gpu_count > 1))
-            )
+        # if results.get('training_results'):
+        #     hybrid_results = run_hybrid_system_if_approved(
+        #         results['training_results'], 
+        #         TMEConfig(use_distributed=(gpu_count > 1))
+        #     )
             
-            if hybrid_results:
-                print("\n✅ Sistema híbrido executado com sucesso")
-                print("📊 Verifique 'hybrid_validation_results.json' para comparação")
+        #     if hybrid_results:
+        #         print("\n✅ Sistema híbrido executado com sucesso")
+        #         print("📊 Verifique 'hybrid_validation_results.json' para comparação")
         
         print("\n✅ PIPELINE CONCLUÍDO COM SUCESSO")
         print("📊 Resultados salvos em 'validation_results.json'")
