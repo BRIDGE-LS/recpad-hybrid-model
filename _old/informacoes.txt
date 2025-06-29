@@ -1,0 +1,9 @@
+Modelo 1
+augmentations genericas
+best_model.pth - Efficientnet B4
+
+Modelo 2
+augmentations otimizadas
+best_model_augmentation_otimizado.pth
+
+Modelo 3

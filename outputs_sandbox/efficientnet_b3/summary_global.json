@@ -1,0 +1,14 @@
+[
+    {
+        "best_epoch": 1,
+        "best_val_f1": 0.4355,
+        "final_val_acc": 0.4837,
+        "fold": 0
+    },
+    {
+        "best_epoch": 1,
+        "best_val_f1": 0.4411,
+        "final_val_acc": 0.494,
+        "fold": 1
+    }
+]

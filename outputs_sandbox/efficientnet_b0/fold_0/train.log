@@ -1,0 +1,2 @@
+2025-06-29 12:14:42,872 - INFO - Epoch 1: Train Loss = 1.9687, Val Loss = 2.1858, Val F1 = 0.2268, Val Acc = 0.2872
+2025-06-29 12:15:47,291 - INFO - Epoch 2: Train Loss = 1.6577, Val Loss = 1.6110, Val F1 = 0.4000, Val Acc = 0.4713

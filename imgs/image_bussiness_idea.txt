@@ -1,0 +1,74 @@
+A imagem tenta comunicar visualmente os principais componentes do classificador baseado em ensemble com EfficientNet, desde a entrada (WSI) até a saída interpretável para uso clínico. 
+
+Da esquerda para a direita temos:
+
+---
+
+## 🧪 1. Entrada: Whole Slide Image (WSI)
+
+* A imagem do lado esquerdo representa uma **lâmina histopatológica digitalizada**.
+* Uma **região de interesse (ROI)** é destacada com zoom.
+* Dessa ROI são extraídos **patches de imagem menores (224×224, 300×300 ou 380×380)** — como é usual em pipelines de histopatologia digital (Echle et al., 2021; Campanella et al., 2019).
+
+---
+
+## 🧱 2. Preparação dos Patches
+
+* Os **patches extraídos** são empilhados em batches e enviados para processamento por modelos EfficientNet, como no esquema mostrado abaixo.
+* Cada patch representa uma **unidade morfológica** (p. ex., grupo glandular, tecido inflamatório, stroma) que será classificada individualmente.
+
+---
+
+## 🧠 3. Classificador EfficientNet
+
+* O bloco azul central mostra a **função `get_model(model_name)`** (do `model.py`) que configura dinamicamente uma instância do modelo desejado (B0, B3 ou B4).
+* Esse bloco é parametrizado com:
+  * `input_size`: diferente para cada variante do EfficientNet
+  * `dropout`: ajustado conforme complexidade morfológica (0.25 para modelos leves, 0.4 para profundos)
+
+* Os **três modelos** são executados paralelamente, e cada um processa os mesmos patches com diferentes capacidades de abstração morfológica:
+  * B0: baixa complexidade (menos parâmetros)
+  * B3: capacidade intermediária
+  * B4: mais profundo, usado para tecidos mais heterogêneos (como STR e TUM)
+
+---
+
+## 🧪 4. Ensemble das Saídas
+
+* As saídas **softmax de cada modelo** são combinadas no ensemble.
+* A imagem atual representa **soft voting ponderado**, mas no sistema também será possível usar **stacked generalization**, como proposto por Wolpert (1992).
+
+---
+
+## 📊 5. Saída para o Patologista
+
+* O gráfico de pizza do lado direito representa a **predição final do ensemble** como a **proporção de tecidos** presentes em uma WSI.
+* Por exemplo:
+
+  * **57.4% Tumor**
+  * **24.2% Stroma**
+  * **9.2% Complex Stroma**
+  * Outros tecidos minoritários também aparecem (debris, adipose, mucosa etc.)
+
+### 🧬 Interpretação clínica:
+
+* Isso fornece uma **leitura quantitativa e interpretável** da composição do microambiente tumoral, útil para:
+
+  * Classificação de subtipos tumorais
+  * Predição de resposta à imunoterapia (Liang et al., 2023)
+  * Suporte à decisão diagnóstica
+
+---
+
+## 📚 Justificativas e Referências
+
+| Elemento Visual                   | Justificativa                                                  | Fonte                            |
+| --------------------------------- | -------------------------------------------------------------- | -------------------------------- |
+| Extração de patches               | Prática padrão em WSI para reduzir custo e aumentar amostragem | Tellez et al., 2019; Campanella  |
+| Uso de EfficientNet B0–B4         | Balanceamento entre capacidade e eficiência                    | Tan & Le, 2019                   |
+| Diferentes resoluções e dropout   | Adaptados à complexidade morfológica por modelo                | Liang et al., 2023; Echle et al. |
+| Soft Voting                       | Estratégia de ensemble simples e robusta                       | Kuncheva, 2004                   |
+| Output como percentual por classe | Geração de mapa morfológico da WSI com aplicações clínicas     | Wang et al., 2022                |
+
+---
+

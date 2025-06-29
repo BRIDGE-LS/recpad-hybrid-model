@@ -1,0 +1,21 @@
+RELATÓRIO DE ANÁLISE TME GÁSTRICO
+==================================================
+
+Data/Hora: 2025-06-12 17:33:44
+Dataset: data
+Sample size: 2720
+Tempo de execução: 11120.0s
+
+VALIDAÇÃO DA LITERATURA:
+Problemas validados: 4/5
+
+✗ Mucina Transparency: 0.155
+✓ Stroma Confusion: 0.793
+✓ Nuclear Pleomorphism: 1.000
+✓ He Stain Variability: 0.750
+✓ Tissue Heterogeneity: 1.000
+
+RECOMENDAÇÕES PRINCIPAIS:
+1. Normalização de cor robusta
+   Melhoria esperada: 3-5% balanced accuracy
+

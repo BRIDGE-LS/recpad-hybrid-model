@@ -1,0 +1,3 @@
+best_epoch,best_val_f1,final_val_acc,fold
+1,0.5876,0.5959,0
+1,0.5357,0.5479,1
