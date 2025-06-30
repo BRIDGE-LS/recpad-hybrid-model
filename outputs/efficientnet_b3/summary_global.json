@@ -1,0 +1,32 @@
+[
+    {
+        "best_epoch": 3,
+        "best_val_f1": 0.7546,
+        "final_val_acc": 0.7367,
+        "fold": 0
+    },
+    {
+        "best_epoch": 3,
+        "best_val_f1": 0.7472,
+        "final_val_acc": 0.7353,
+        "fold": 1
+    },
+    {
+        "best_epoch": 3,
+        "best_val_f1": 0.7493,
+        "final_val_acc": 0.74,
+        "fold": 2
+    },
+    {
+        "best_epoch": 1,
+        "best_val_f1": 0.7495,
+        "final_val_acc": 0.7326,
+        "fold": 3
+    },
+    {
+        "best_epoch": 1,
+        "best_val_f1": 0.7546,
+        "final_val_acc": 0.7432,
+        "fold": 4
+    }
+]

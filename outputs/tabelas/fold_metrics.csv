@@ -1,0 +1,16 @@
+model,fold,val_macro_f1,val_accuracy,val_balanced_accuracy,val_kappa,epoch
+efficientnet_b0,0,0.7326,0.7325,0.7325,0.6943,18
+efficientnet_b0,1,0.7244,0.7237,0.7237,0.6843,18
+efficientnet_b0,2,0.7312,0.7308,0.7308,0.6924,18
+efficientnet_b0,3,0.7325,0.7329,0.7329,0.6948,19
+efficientnet_b0,4,0.7407,0.7421,0.7421,0.7052,20
+efficientnet_b3,0,0.7359,0.7367,0.7366,0.699,19
+efficientnet_b3,1,0.7359,0.7353,0.7353,0.6975,19
+efficientnet_b3,2,0.7396,0.74,0.74,0.7028,19
+efficientnet_b3,3,0.7331,0.7326,0.7326,0.6944,17
+efficientnet_b3,4,0.7438,0.7432,0.7432,0.7065,17
+efficientnet_b4,0,0.7397,0.7408,0.7408,0.7038,20
+efficientnet_b4,1,0.7363,0.7371,0.7371,0.6995,21
+efficientnet_b4,2,0.7403,0.7408,0.7408,0.7038,21
+efficientnet_b4,3,0.7381,0.74,0.74,0.7028,20
+efficientnet_b4,4,0.7495,0.7492,0.7492,0.7133,22

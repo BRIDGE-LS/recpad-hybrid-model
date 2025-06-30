@@ -1,0 +1,7 @@
+model,fold,f1,acc,auc
+efficientnet_b0,0,,,
+efficientnet_b0,1,,,
+efficientnet_b3,0,,,
+efficientnet_b3,1,,,
+efficientnet_b4,0,,,
+efficientnet_b4,1,,,

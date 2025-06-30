@@ -1,0 +1,5 @@
+p-valor do teste de Friedman: nan
+
+Wilcoxon pareado contra baseline:
+- efficientnet_b3: p = nan
+- efficientnet_b4: p = nan

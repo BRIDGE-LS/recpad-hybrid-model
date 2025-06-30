@@ -1,6 +1,6 @@
 data:
-  image_dir: "data/images"
-  label_csv: "data/labels.csv"
+  image_dir: "hmu_gc_data/all_image"
+  csv_path: "data/labels.csv"
   output_dir: "outputs"
   checkpoint_dir: "outputs/checkpoints"
   log_dir: "outputs/logs"
@@ -12,6 +12,9 @@ dataset:
   n_folds: 5
   stratify: true
   seed: 42
+  target_col: "label"
+  input_col: "filename"
+
 augmentations:
   strategy: "per_class"
   input_size: 224

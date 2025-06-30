@@ -1,0 +1,8 @@
+The statistical analysis was conducted for 3 populations with 5 paired samples.
+The family-wise significance level of the tests is alpha=0.050.
+We failed to reject the null hypothesis that the population is normal for all populations (minimal observed p-value=0.132). Therefore, we assume that all populations are normal.
+We applied Bartlett's test for homogeneity and failed to reject the null hypothesis (p=0.818) that the data is homoscedastic. Thus, we assume that our data is homoscedastic.
+Because we have more than two populations and all populations are normal and homoscedastic, we use repeated measures ANOVA as omnibus test to determine if there are any significant differences between the mean values of the populations. If the results of the ANOVA test are significant, we use the post-hoc Tukey HSD test to infer which differences are significant. We report the mean value (M) and the standard deviation (SD) for each population. Populations are significantly different if their confidence intervals are not overlapping.
+We reject the null hypothesis (p=0.001) of the repeated measures ANOVA that there is a difference between the mean values of the populations efficientnet_b0 (M=0.732+-0.004, SD=0.006), efficientnet_b3 (M=0.738+-0.004, SD=0.004), and efficientnet_b4 (M=0.741+-0.004, SD=0.005). Therefore, we assume that there is a statistically significant difference between the mean values of the populations.
+Based post-hoc Tukey HSD test, we assume that there are no significant differences within the following groups: efficientnet_b3 and efficientnet_b4. All other differences are significant.
+
