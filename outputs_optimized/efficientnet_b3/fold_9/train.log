@@ -1,0 +1,18 @@
+2025-07-01 16:59:27,714 - INFO - Epoch 1: Train Loss = 0.7225, Val Loss = 0.4071, Val F1 = 0.7038, Val Acc = 0.7060
+2025-07-01 17:02:31,187 - INFO - Epoch 2: Train Loss = 0.4308, Val Loss = 0.3488, Val F1 = 0.7474, Val Acc = 0.7482
+2025-07-01 17:05:33,979 - INFO - Epoch 3: Train Loss = 0.3337, Val Loss = 0.3238, Val F1 = 0.7498, Val Acc = 0.7498
+2025-07-01 17:08:38,489 - INFO - Epoch 4: Train Loss = 0.2646, Val Loss = 0.3222, Val F1 = 0.7597, Val Acc = 0.7613
+2025-07-01 17:11:39,536 - INFO - Epoch 5: Train Loss = 0.2053, Val Loss = 0.3375, Val F1 = 0.7521, Val Acc = 0.7523
+2025-07-01 17:14:41,387 - INFO - Epoch 6: Train Loss = 0.1527, Val Loss = 0.3513, Val F1 = 0.7590, Val Acc = 0.7604
+2025-07-01 17:17:43,611 - INFO - Epoch 7: Train Loss = 0.1220, Val Loss = 0.3643, Val F1 = 0.7639, Val Acc = 0.7649
+2025-07-01 17:20:45,403 - INFO - Epoch 8: Train Loss = 0.0962, Val Loss = 0.3775, Val F1 = 0.7544, Val Acc = 0.7562
+2025-07-01 17:23:46,506 - INFO - Epoch 9: Train Loss = 0.0787, Val Loss = 0.4138, Val F1 = 0.7508, Val Acc = 0.7523
+2025-07-01 17:26:48,710 - INFO - Epoch 10: Train Loss = 0.0675, Val Loss = 0.4186, Val F1 = 0.7518, Val Acc = 0.7536
+2025-07-01 17:29:48,870 - INFO - Epoch 11: Train Loss = 0.0551, Val Loss = 0.4324, Val F1 = 0.7505, Val Acc = 0.7520
+2025-07-01 17:32:51,009 - INFO - Epoch 12: Train Loss = 0.0463, Val Loss = 0.4533, Val F1 = 0.7517, Val Acc = 0.7514
+2025-07-01 17:35:52,168 - INFO - Epoch 13: Train Loss = 0.0428, Val Loss = 0.4656, Val F1 = 0.7448, Val Acc = 0.7453
+2025-07-01 17:38:52,273 - INFO - Epoch 14: Train Loss = 0.0331, Val Loss = 0.4732, Val F1 = 0.7452, Val Acc = 0.7465
+2025-07-01 17:41:51,867 - INFO - Epoch 15: Train Loss = 0.0297, Val Loss = 0.4778, Val F1 = 0.7485, Val Acc = 0.7504
+2025-07-01 17:44:52,237 - INFO - Epoch 16: Train Loss = 0.0266, Val Loss = 0.4828, Val F1 = 0.7404, Val Acc = 0.7424
+2025-07-01 17:47:55,021 - INFO - Epoch 17: Train Loss = 0.0246, Val Loss = 0.4844, Val F1 = 0.7517, Val Acc = 0.7520
+2025-07-01 17:47:55,021 - INFO - Early stopping triggered.

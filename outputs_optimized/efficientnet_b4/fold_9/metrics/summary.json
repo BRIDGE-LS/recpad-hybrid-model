@@ -1,0 +1,7 @@
+{
+    "val_accuracy": 0.7523,
+    "val_macro_f1": 0.7506,
+    "val_balanced_accuracy": 0.7523,
+    "val_kappa": 0.7169,
+    "epoch": 26
+}

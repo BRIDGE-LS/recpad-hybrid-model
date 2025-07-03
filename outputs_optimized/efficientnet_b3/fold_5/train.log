@@ -1,0 +1,23 @@
+2025-07-01 14:26:45,615 - INFO - Epoch 1: Train Loss = 0.7163, Val Loss = 0.4498, Val F1 = 0.6931, Val Acc = 0.6936
+2025-07-01 14:29:55,573 - INFO - Epoch 2: Train Loss = 0.4216, Val Loss = 0.3831, Val F1 = 0.7245, Val Acc = 0.7235
+2025-07-01 14:33:05,771 - INFO - Epoch 3: Train Loss = 0.3316, Val Loss = 0.3616, Val F1 = 0.7326, Val Acc = 0.7325
+2025-07-01 14:36:16,442 - INFO - Epoch 4: Train Loss = 0.2626, Val Loss = 0.3587, Val F1 = 0.7425, Val Acc = 0.7418
+2025-07-01 14:39:26,761 - INFO - Epoch 5: Train Loss = 0.2036, Val Loss = 0.3692, Val F1 = 0.7381, Val Acc = 0.7383
+2025-07-01 14:42:37,281 - INFO - Epoch 6: Train Loss = 0.1541, Val Loss = 0.3972, Val F1 = 0.7395, Val Acc = 0.7386
+2025-07-01 14:45:47,693 - INFO - Epoch 7: Train Loss = 0.1195, Val Loss = 0.4121, Val F1 = 0.7406, Val Acc = 0.7402
+2025-07-01 14:48:58,826 - INFO - Epoch 8: Train Loss = 0.0955, Val Loss = 0.4292, Val F1 = 0.7421, Val Acc = 0.7402
+2025-07-01 14:52:08,901 - INFO - Epoch 9: Train Loss = 0.0776, Val Loss = 0.4453, Val F1 = 0.7415, Val Acc = 0.7418
+2025-07-01 14:55:19,024 - INFO - Epoch 10: Train Loss = 0.0634, Val Loss = 0.4511, Val F1 = 0.7426, Val Acc = 0.7424
+2025-07-01 14:58:29,146 - INFO - Epoch 11: Train Loss = 0.0557, Val Loss = 0.4912, Val F1 = 0.7366, Val Acc = 0.7367
+2025-07-01 15:01:39,431 - INFO - Epoch 12: Train Loss = 0.0506, Val Loss = 0.4880, Val F1 = 0.7456, Val Acc = 0.7444
+2025-07-01 15:04:49,423 - INFO - Epoch 13: Train Loss = 0.0428, Val Loss = 0.5163, Val F1 = 0.7420, Val Acc = 0.7424
+2025-07-01 15:07:59,501 - INFO - Epoch 14: Train Loss = 0.0406, Val Loss = 0.5300, Val F1 = 0.7392, Val Acc = 0.7386
+2025-07-01 15:11:09,327 - INFO - Epoch 15: Train Loss = 0.0372, Val Loss = 0.5690, Val F1 = 0.7381, Val Acc = 0.7376
+2025-07-01 15:14:19,321 - INFO - Epoch 16: Train Loss = 0.0326, Val Loss = 0.5869, Val F1 = 0.7377, Val Acc = 0.7363
+2025-07-01 15:17:29,196 - INFO - Epoch 17: Train Loss = 0.0298, Val Loss = 0.5575, Val F1 = 0.7447, Val Acc = 0.7444
+2025-07-01 15:20:39,282 - INFO - Epoch 18: Train Loss = 0.0277, Val Loss = 0.5518, Val F1 = 0.7433, Val Acc = 0.7428
+2025-07-01 15:23:49,758 - INFO - Epoch 19: Train Loss = 0.0226, Val Loss = 0.5653, Val F1 = 0.7435, Val Acc = 0.7424
+2025-07-01 15:26:59,772 - INFO - Epoch 20: Train Loss = 0.0201, Val Loss = 0.5614, Val F1 = 0.7401, Val Acc = 0.7405
+2025-07-01 15:30:10,219 - INFO - Epoch 21: Train Loss = 0.0169, Val Loss = 0.5745, Val F1 = 0.7391, Val Acc = 0.7395
+2025-07-01 15:33:20,764 - INFO - Epoch 22: Train Loss = 0.0163, Val Loss = 0.5813, Val F1 = 0.7416, Val Acc = 0.7412
+2025-07-01 15:33:20,764 - INFO - Early stopping triggered.

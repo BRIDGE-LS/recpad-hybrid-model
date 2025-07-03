@@ -1,0 +1,5 @@
+{
+    "best_epoch": 8,
+    "best_val_f1": 0.7561,
+    "final_val_acc": 0.7466
+}

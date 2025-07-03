@@ -1,20 +1,20 @@
 {
-    "config_used": "config/config.yaml",
+    "config_used": "config/config_optimized.yaml",
     "n_gpus": 2,
     "models": [
         "efficientnet_b0",
         "efficientnet_b3",
         "efficientnet_b4"
     ],
-    "n_folds": 5,
-    "start_time": "2025-06-29 18:31:36",
-    "duration_minutes": 516.51,
+    "n_folds": 10,
+    "start_time": "2025-07-01 10:03:09",
+    "duration_minutes": 1356.35,
     "jobs": [
         {
             "model": "efficientnet_b0",
             "fold": 1,
             "gpu": 1,
-            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config.yaml --model efficientnet_b0 --fold 1",
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b0 --fold 1",
             "status": "success",
             "log_file": "logs/efficientnet_b0_fold1.out"
         },
@@ -22,7 +22,7 @@
             "model": "efficientnet_b0",
             "fold": 0,
             "gpu": 0,
-            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config.yaml --model efficientnet_b0 --fold 0",
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b0 --fold 0",
             "status": "success",
             "log_file": "logs/efficientnet_b0_fold0.out"
         },
@@ -30,7 +30,7 @@
             "model": "efficientnet_b0",
             "fold": 2,
             "gpu": 0,
-            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config.yaml --model efficientnet_b0 --fold 2",
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b0 --fold 2",
             "status": "success",
             "log_file": "logs/efficientnet_b0_fold2.out"
         },
@@ -38,7 +38,7 @@
             "model": "efficientnet_b0",
             "fold": 3,
             "gpu": 1,
-            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config.yaml --model efficientnet_b0 --fold 3",
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b0 --fold 3",
             "status": "success",
             "log_file": "logs/efficientnet_b0_fold3.out"
         },
@@ -46,55 +46,135 @@
             "model": "efficientnet_b0",
             "fold": 4,
             "gpu": 0,
-            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config.yaml --model efficientnet_b0 --fold 4",
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b0 --fold 4",
             "status": "success",
             "log_file": "logs/efficientnet_b0_fold4.out"
         },
         {
-            "model": "efficientnet_b3",
-            "fold": 0,
+            "model": "efficientnet_b0",
+            "fold": 5,
             "gpu": 1,
-            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config.yaml --model efficientnet_b3 --fold 0",
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b0 --fold 5",
             "status": "success",
-            "log_file": "logs/efficientnet_b3_fold0.out"
+            "log_file": "logs/efficientnet_b0_fold5.out"
+        },
+        {
+            "model": "efficientnet_b0",
+            "fold": 6,
+            "gpu": 0,
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b0 --fold 6",
+            "status": "success",
+            "log_file": "logs/efficientnet_b0_fold6.out"
+        },
+        {
+            "model": "efficientnet_b0",
+            "fold": 7,
+            "gpu": 1,
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b0 --fold 7",
+            "status": "success",
+            "log_file": "logs/efficientnet_b0_fold7.out"
+        },
+        {
+            "model": "efficientnet_b0",
+            "fold": 9,
+            "gpu": 1,
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b0 --fold 9",
+            "status": "success",
+            "log_file": "logs/efficientnet_b0_fold9.out"
+        },
+        {
+            "model": "efficientnet_b0",
+            "fold": 8,
+            "gpu": 0,
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b0 --fold 8",
+            "status": "success",
+            "log_file": "logs/efficientnet_b0_fold8.out"
         },
         {
             "model": "efficientnet_b3",
             "fold": 1,
-            "gpu": 0,
-            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config.yaml --model efficientnet_b3 --fold 1",
+            "gpu": 1,
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b3 --fold 1",
             "status": "success",
             "log_file": "logs/efficientnet_b3_fold1.out"
         },
         {
             "model": "efficientnet_b3",
+            "fold": 0,
+            "gpu": 0,
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b3 --fold 0",
+            "status": "success",
+            "log_file": "logs/efficientnet_b3_fold0.out"
+        },
+        {
+            "model": "efficientnet_b3",
             "fold": 2,
-            "gpu": 1,
-            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config.yaml --model efficientnet_b3 --fold 2",
+            "gpu": 0,
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b3 --fold 2",
             "status": "success",
             "log_file": "logs/efficientnet_b3_fold2.out"
         },
         {
             "model": "efficientnet_b3",
             "fold": 3,
-            "gpu": 0,
-            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config.yaml --model efficientnet_b3 --fold 3",
+            "gpu": 1,
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b3 --fold 3",
             "status": "success",
             "log_file": "logs/efficientnet_b3_fold3.out"
         },
         {
             "model": "efficientnet_b3",
             "fold": 4,
-            "gpu": 1,
-            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config.yaml --model efficientnet_b3 --fold 4",
+            "gpu": 0,
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b3 --fold 4",
             "status": "success",
             "log_file": "logs/efficientnet_b3_fold4.out"
+        },
+        {
+            "model": "efficientnet_b3",
+            "fold": 5,
+            "gpu": 1,
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b3 --fold 5",
+            "status": "success",
+            "log_file": "logs/efficientnet_b3_fold5.out"
+        },
+        {
+            "model": "efficientnet_b3",
+            "fold": 6,
+            "gpu": 0,
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b3 --fold 6",
+            "status": "success",
+            "log_file": "logs/efficientnet_b3_fold6.out"
+        },
+        {
+            "model": "efficientnet_b3",
+            "fold": 7,
+            "gpu": 1,
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b3 --fold 7",
+            "status": "success",
+            "log_file": "logs/efficientnet_b3_fold7.out"
+        },
+        {
+            "model": "efficientnet_b3",
+            "fold": 8,
+            "gpu": 0,
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b3 --fold 8",
+            "status": "success",
+            "log_file": "logs/efficientnet_b3_fold8.out"
+        },
+        {
+            "model": "efficientnet_b3",
+            "fold": 9,
+            "gpu": 1,
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b3 --fold 9",
+            "status": "success",
+            "log_file": "logs/efficientnet_b3_fold9.out"
         },
         {
             "model": "efficientnet_b4",
             "fold": 0,
             "gpu": 0,
-            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config.yaml --model efficientnet_b4 --fold 0",
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b4 --fold 0",
             "status": "success",
             "log_file": "logs/efficientnet_b4_fold0.out"
         },
@@ -102,7 +182,7 @@
             "model": "efficientnet_b4",
             "fold": 1,
             "gpu": 1,
-            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config.yaml --model efficientnet_b4 --fold 1",
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b4 --fold 1",
             "status": "success",
             "log_file": "logs/efficientnet_b4_fold1.out"
         },
@@ -110,25 +190,65 @@
             "model": "efficientnet_b4",
             "fold": 2,
             "gpu": 0,
-            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config.yaml --model efficientnet_b4 --fold 2",
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b4 --fold 2",
             "status": "success",
             "log_file": "logs/efficientnet_b4_fold2.out"
         },
         {
             "model": "efficientnet_b4",
+            "fold": 4,
+            "gpu": 0,
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b4 --fold 4",
+            "status": "success",
+            "log_file": "logs/efficientnet_b4_fold4.out"
+        },
+        {
+            "model": "efficientnet_b4",
+            "fold": 5,
+            "gpu": 1,
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b4 --fold 5",
+            "status": "error",
+            "log_file": "logs/efficientnet_b4_fold5.out"
+        },
+        {
+            "model": "efficientnet_b4",
             "fold": 3,
             "gpu": 1,
-            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config.yaml --model efficientnet_b4 --fold 3",
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b4 --fold 3",
             "status": "success",
             "log_file": "logs/efficientnet_b4_fold3.out"
         },
         {
             "model": "efficientnet_b4",
-            "fold": 4,
+            "fold": 6,
             "gpu": 0,
-            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config.yaml --model efficientnet_b4 --fold 4",
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b4 --fold 6",
             "status": "success",
-            "log_file": "logs/efficientnet_b4_fold4.out"
+            "log_file": "logs/efficientnet_b4_fold6.out"
+        },
+        {
+            "model": "efficientnet_b4",
+            "fold": 7,
+            "gpu": 1,
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b4 --fold 7",
+            "status": "success",
+            "log_file": "logs/efficientnet_b4_fold7.out"
+        },
+        {
+            "model": "efficientnet_b4",
+            "fold": 8,
+            "gpu": 0,
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b4 --fold 8",
+            "status": "success",
+            "log_file": "logs/efficientnet_b4_fold8.out"
+        },
+        {
+            "model": "efficientnet_b4",
+            "fold": 9,
+            "gpu": 1,
+            "command": "python /home/pesquisa/Development/workspaces/recpad-hybrid-model/core/training.py --config config/config_optimized.yaml --model efficientnet_b4 --fold 9",
+            "status": "success",
+            "log_file": "logs/efficientnet_b4_fold9.out"
         }
     ]
 }

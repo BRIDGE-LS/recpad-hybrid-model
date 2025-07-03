@@ -7,6 +7,7 @@ import logging
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torch.nn.functional as F
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -15,6 +16,7 @@ import json
 from pathlib import Path
 from tqdm import tqdm
 from sklearn.model_selection import StratifiedKFold
+from sklearn.utils.class_weight import compute_class_weight
 from torch.utils.data import DataLoader
 from core.config_loader import ConfigLoader
 from core.model import ModelFactory
@@ -26,6 +28,19 @@ from core.utils.data_utils import generate_labels_from_directory
 from core.visualization import plot_training_history
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
+
+class FocalLoss(nn.Module):
+    def __init__(self, gamma=2.0, weight=None):
+        super(FocalLoss, self).__init__()
+        self.gamma = gamma
+        self.weight = weight
+
+    def forward(self, input, target):
+        logpt = F.log_softmax(input, dim=1)
+        pt = torch.exp(logpt)
+        logpt = (1 - pt) ** self.gamma * logpt
+        loss = F.nll_loss(logpt, target, weight=self.weight)
+        return loss
 
 def setup_logger(log_path):
     logging.basicConfig(
@@ -66,6 +81,11 @@ def train_one_fold(config_path, model_name, fold):
     df = pd.read_csv(data_cfg["csv_path"])
     labels = df[dataset_cfg["target_col"]].values
 
+    classes = dataset_cfg["class_names"]
+    class_ids = np.array([classes.index(label) for label in labels])
+    class_weights = compute_class_weight(class_weight="balanced", classes=np.arange(len(classes)), y=class_ids)
+    class_weights_tensor = torch.tensor(class_weights, dtype=torch.float).cuda()
+
     # === Stratified K-Fold ===
     skf = StratifiedKFold(n_splits=dataset_cfg["n_folds"], shuffle=True, random_state=42)
     train_idx, val_idx = list(skf.split(np.zeros(len(labels)), labels))[fold]
@@ -93,12 +113,25 @@ def train_one_fold(config_path, model_name, fold):
     model = ModelFactory(model_cfg, num_classes).get_model().to("cuda")
 
     # === Optimizer & Scheduler ===
-    optimizer = optim.AdamW(model.parameters(), lr=training_cfg["learning_rate"],
-                            weight_decay=training_cfg["weight_decay"])
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=training_cfg["epochs"])
+    learning_rate = model_cfg.get("learning_rate")
+    weight_decay = model_cfg.get("weight_decay")
+    optimizer = optim.AdamW(model.parameters(), lr=learning_rate,
+                            weight_decay=weight_decay)
+    
+    # scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=training_cfg["epochs"])
+
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer,
+        mode='max',  # porque você quer maximizar val_macro_f1
+        factor=0.5,
+        patience=5,
+        min_lr=1e-6
+    )
 
     # === Loss ===
-    criterion = nn.CrossEntropyLoss()
+    #criterion = nn.CrossEntropyLoss()
+    #criterion = nn.CrossEntropyLoss(weight=class_weights_tensor)
+    criterion = FocalLoss(gamma=2.0, weight=class_weights_tensor)
 
     # === Training Loop ===
     best_f1 = 0
@@ -166,7 +199,9 @@ def train_one_fold(config_path, model_name, fold):
                 logging.info("Early stopping triggered.")
                 break
 
-        scheduler.step()
+        # scheduler.step()
+        scheduler.step(val_f1)
+
 
     # === Pós-treino ===
     plot_training_history(history, fold_dir)
